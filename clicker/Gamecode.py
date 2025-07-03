@@ -33,6 +33,13 @@ clicker_radius = 100
 upgrade_button = pygame.Rect(50, 500, 200, 60)
 upgrade_cost = 50
 
+# Autoklicker-Button
+autoclicker_button = pygame.Rect(50, 570, 200, 60)
+autoclickers = 0
+autoclicker_cost = 100
+cookies_per_autoclicker = 1
+last_autoclick_time = 0
+
 # Button für Achievements
 achievements_button = pygame.Rect(600, 50, 180, 50)
 show_achievements = False
@@ -126,9 +133,23 @@ while running:
                     cookies_per_click += 1
                     upgrade_cost = int(upgrade_cost * 1.5)
 
+            # Autoklicker kaufen
+            if autoclicker_button.collidepoint(mx, my):
+                if cookies >= autoclicker_cost:
+                    cookies -= autoclicker_cost
+                    autoclickers += 1
+                    autoclicker_cost = int(autoclicker_cost * 1.7)
+
             # Achievements ein-/ausklappen
             if achievements_button.collidepoint(mx, my):
                 show_achievements = not show_achievements
+
+    # Autoklicker generieren Cookies jede Sekunde
+    if not autoklicker_detected:
+        if current_time - last_autoclick_time >= 1000:
+            cookies += autoclickers * cookies_per_autoclicker
+            total_cookies += autoclickers * cookies_per_autoclicker
+            last_autoclick_time = current_time
 
     # Clicker Radius zurücksetzen
     if current_time - last_click_time >= clicker_expansion_time:
@@ -209,6 +230,10 @@ while running:
 
         pygame.draw.rect(screen, GREEN, upgrade_button)
         draw_text(f"Upgrade ({upgrade_cost})", (upgrade_button.x + 10, upgrade_button.y + 10))
+
+        pygame.draw.rect(screen, YELLOW, autoclicker_button)
+        draw_text(f"Autoklicker ({autoclicker_cost})", (autoclicker_button.x + 10, autoclicker_button.y + 10), DARK_GRAY)
+        draw_text(f"Anzahl: {autoclickers}", (autoclicker_button.x + 10, autoclicker_button.y + 40), DARK_GRAY)
 
         pygame.draw.rect(screen, WHITE, achievements_button)
         draw_text("🏆 Achievements anzeigen", (achievements_button.x + 10, achievements_button.y + 10), DARK_GRAY)
