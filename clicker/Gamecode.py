@@ -4,6 +4,8 @@ import threading
 import time
 
 pygame.init()
+dirtblock_enlarged = False
+dirtblock_click_time = 0
 
 # Bildschirmgröße und Farben
 WIDTH, HEIGHT = 800, 600
@@ -32,13 +34,6 @@ clicker_radius = 100
 # Upgrade-Button
 upgrade_button = pygame.Rect(50, 500, 200, 60)
 upgrade_cost = 50
-
-# Autoklicker-Button
-autoclicker_button = pygame.Rect(50, 570, 200, 60)
-autoclickers = 0
-autoclicker_cost = 100
-cookies_per_autoclicker = 1
-last_autoclick_time = 0
 
 # Button für Achievements
 achievements_button = pygame.Rect(600, 50, 180, 50)
@@ -113,6 +108,8 @@ while running:
                 clicker_radius = 120
                 cookies += cookies_per_click
                 total_cookies += cookies_per_click
+                dirtblock_enlarged = True
+                dirtblock_click_time = current_time
                 last_click_time = current_time
 
                 # CPS zählen
@@ -133,26 +130,13 @@ while running:
                     cookies_per_click += 1
                     upgrade_cost = int(upgrade_cost * 1.5)
 
-            # Autoklicker kaufen
-            if autoclicker_button.collidepoint(mx, my):
-                if cookies >= autoclicker_cost:
-                    cookies -= autoclicker_cost
-                    autoclickers += 1
-                    autoclicker_cost = int(autoclicker_cost * 1.7)
-
             # Achievements ein-/ausklappen
             if achievements_button.collidepoint(mx, my):
                 show_achievements = not show_achievements
 
-    # Autoklicker generieren Cookies jede Sekunde
-    if not autoklicker_detected:
-        if current_time - last_autoclick_time >= 1000:
-            cookies += autoclickers * cookies_per_autoclicker
-            total_cookies += autoclickers * cookies_per_autoclicker
-            last_autoclick_time = current_time
-
     # Clicker Radius zurücksetzen
     if current_time - last_click_time >= clicker_expansion_time:
+      
         clicker_radius = 100
 
     # CPS reset alle 1 Sekunde, außer Autoklicker erkannt
@@ -220,8 +204,23 @@ while running:
         draw_text(f"Selbstzerstörung in {seconds_left} Sekunden...", (WIDTH//2, HEIGHT//2 - 20), YELLOW, center=True)
 
     else:
-        # Normales Spiel zeichnen
-        pygame.draw.circle(screen, BLUE, clicker_pos, clicker_radius)
+        
+        boden_block = pygame.image.load("Dirtblock.png").convert_alpha()
+        if dirtblock_enlarged:
+            block_size = (240, 240)  # Vergrößerte Größe
+        else:
+            block_size = (200, 200)  # Normale Größe
+
+
+        block_pos = (300 - (block_size[0] - 200) // 2, 220 - (block_size[1] - 200) // 2)
+        boden_block = pygame.transform.scale(boden_block, block_size)
+
+        # === Block zeichnen 
+        screen.blit(boden_block, block_pos)
+        
+        if dirtblock_enlarged and current_time - dirtblock_click_time >= 100:
+            dirtblock_enlarged = False
+
         draw_text(f"+{cookies_per_click}", (clicker_pos[0], clicker_pos[1] + 10), center=True)
 
         draw_text(f"Cookies: {cookies}", (30, 30))
@@ -230,10 +229,6 @@ while running:
 
         pygame.draw.rect(screen, GREEN, upgrade_button)
         draw_text(f"Upgrade ({upgrade_cost})", (upgrade_button.x + 10, upgrade_button.y + 10))
-
-        pygame.draw.rect(screen, YELLOW, autoclicker_button)
-        draw_text(f"Autoklicker ({autoclicker_cost})", (autoclicker_button.x + 10, autoclicker_button.y + 10), DARK_GRAY)
-        draw_text(f"Anzahl: {autoclickers}", (autoclicker_button.x + 10, autoclicker_button.y + 40), DARK_GRAY)
 
         pygame.draw.rect(screen, WHITE, achievements_button)
         draw_text("🏆 Achievements anzeigen", (achievements_button.x + 10, achievements_button.y + 10), DARK_GRAY)
