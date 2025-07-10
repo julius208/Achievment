@@ -6,6 +6,7 @@ import sqlite3
 
 pygame.init()
 
+
 # Verbindung zur Datenbank herstellen
 conn = sqlite3.connect('game_state.db')  # Datenbank-Datei (kann angepasst werden)
 cursor = conn.cursor()
@@ -44,6 +45,7 @@ if cursor.fetchone()[0] == 0:
     )
     ''')
     conn.commit()
+
 
 # Bildschirmgröße und Farben
 WIDTH, HEIGHT = 800, 600
@@ -89,6 +91,13 @@ last_autoclick_time = 0
 rebirth_button = pygame.Rect(50, 400, 200, 50)
 rebirth_cost_base = 5000
 rebirth_discount_factor = 0.95
+
+# Autoklicker-Button
+autoclicker_button = pygame.Rect(50, 570, 200, 60)
+autoclickers = 0
+autoclicker_cost = 100
+cookies_per_autoclicker = 1
+last_autoclick_time = 0
 
 # Button für Achievements
 achievements_button = pygame.Rect(600, 50, 180, 50)
@@ -167,7 +176,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        elif event.type == pygame.MOUSEBUTTONDOWN and not autoklicker_detected:
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not autoklicker_detected:
             mx, my = pygame.mouse.get_pos()
             dx = mx - clicker_pos[0]
             dy = my - clicker_pos[1]
@@ -189,13 +198,16 @@ while running:
                 if cookies >= upgrade_cost:
                     cookies -= upgrade_cost
                     cookies_per_click += 1
+
                     upgrade_cost = int(upgrade_cost * 1.5 * (rebirth_discount_factor ** rebirths))
 
             # Autoklicker
+
             if autoclicker_button.collidepoint(mx, my):
                 if cookies >= autoclicker_cost:
                     cookies -= autoclicker_cost
                     autoclickers += 1
+
                     autoclicker_cost = int(autoclicker_cost * 1.7 * (rebirth_discount_factor ** rebirths))
 
             # Rebirth
@@ -229,6 +241,7 @@ while running:
         cookies += autoclickers * cookies_per_autoclicker
         total_cookies += autoclickers * cookies_per_autoclicker
         last_autoclick_time = current_time
+
 
     if current_time - last_click_time >= clicker_expansion_time:
         clicker_radius = 100
@@ -284,6 +297,7 @@ while running:
         draw_text(f"Selbstzerstörung in {seconds_left} Sekunden...", (WIDTH // 2, HEIGHT // 2 - 20), YELLOW, center=True)
 
     else:
+
         pygame.draw.circle(screen, BLUE, clicker_pos, clicker_radius)
         draw_text(f"+{cookies_per_click}", (clicker_pos[0], clicker_pos[1] + 10), center=True)
         draw_text(f"Cookies: {cookies}", (30, 30))
@@ -297,6 +311,7 @@ while running:
         else:
             pygame.draw.rect(screen, GRAY, upgrade_button)
         draw_text(f"Upgrade ({upgrade_cost})", (upgrade_button.x + 10, upgrade_button.y + 10))
+
 
         # Autoklicker-Button
         if cookies >= autoclicker_cost:
@@ -314,6 +329,7 @@ while running:
             pygame.draw.rect(screen, GRAY, rebirth_button)
         draw_text(f"Rebirth ({current_rebirth_cost})", (rebirth_button.x + 10, rebirth_button.y + 10))
         draw_text(f"Anzahl: {rebirths}", (rebirth_button.x + 10, rebirth_button.y + 30))
+
 
         pygame.draw.rect(screen, WHITE, achievements_button)
         draw_text("🏆 Achievements anzeigen", (achievements_button.x + 10, achievements_button.y + 10), DARK_GRAY)
